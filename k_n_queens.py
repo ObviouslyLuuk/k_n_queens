@@ -10,7 +10,7 @@ class ChessBoard:
 		self.qs = np.full((n**2, k), -1)
 
 	def get_n_queens(self):
-		return self.board.sum()
+		return int(self.board.sum())
 
 	def get_board(self):
 		total_string = ""
@@ -125,9 +125,9 @@ def define_chi(n, k):
 		Not(q[1][1]) | b[1],	# Force q -> b for 1,1
 	]
 
-	# Force ( q -> b | q ) paths
+	# Force ( q[i][j] -> q[i-1][j] | b[i]&q[i-1][j-1] ) paths in q table
 	# Every q between first column and diagonal
-	n_clauses += 2 * (N-1) * (k-1) # taking worst case, not (k*k/2 + (N-k)*k)
+	n_clauses += 2 * (N-1) * (k-1) # taking worst case
 	for i in range_incl(2, N):
 		for j in range_incl(2, min(i-1, k)):
 			chi_n_k_clauses.extend([
@@ -148,6 +148,9 @@ def define_chi(n, k):
 			(Not(q[i][1]) | q[i-1][1] | b[i])
 		)
 
+	# ----------------------------------------------------------------
+	# Optional for functionality but nice for visualizing the q table.
+	# Also speeds up computation by limiting combinations.
 	# Force q monotonicity
 	n_clauses += (N-1) * k
 	for i in range_incl(1, N-1):
@@ -155,7 +158,11 @@ def define_chi(n, k):
 			chi_n_k_clauses.append(
 				(Not(q[i][j]) | q[i+1][j])
 			)
+	# ----------------------------------------------------------------
 
+	# ----------------------------------------------------------------
+	# Optional for functionality but speeds up computation by 
+	# limiting combinations.
 	# Force b -> q
 	# b[i] & q[i-1][j-1] -> q[i][j]
 	n_clauses += (N-1) * (k-1)
@@ -170,6 +177,7 @@ def define_chi(n, k):
 		chi_n_k_clauses.append(
 				Not(b[i]) | q[i][1]
 		)
+	# ----------------------------------------------------------------
 
 	print(f"#clauses: {len(chi_n_k_clauses)} estimated: {n_clauses}")
 
@@ -178,18 +186,22 @@ def define_chi(n, k):
 
 
 if __name__ == "__main__":
-	n = 4
-	k = 3
+	n = 3
+	k = 4
 	psi_n = define_psi(n)		# ~ 2 n^3 clauses
 	chi_n_k = define_chi(n, k) 	# ~ 4kn^2 clauses
 
-	formula = psi_n & chi_n_k
+	formula = And(
+		# psi_n,
+		chi_n_k
+	)
 
 	if n <= 4:
 		solutions = list(sympy.logic.inference.satisfiable(formula, all_models=True))
 	else:
 		solutions = [sympy.logic.inference.satisfiable(formula, all_models=False)]
 
+	queen_amounts = []
 	for sol in solutions:
 		if not sol:
 			print("unsat")
@@ -206,9 +218,14 @@ if __name__ == "__main__":
 				j = int(symbol.split('_')[2]) - 1
 				cb.qs[i][j] = int(true)
 
-		print(f"{cb.get_n_queens():.0f} Queens")
+		queen_amount = cb.get_n_queens()
+		queen_amounts.append(queen_amount)
+		print(f"{queen_amount} Queens")
 		if n <= 100:
 			print(f"Board: \n{cb.get_board()}")
 		if n <= 5:
 			print(f"qs: \n{cb.get_qs()}")
 		print()
+	if len(solutions) > 1:
+		print(f"#solutions: {len(solutions)}")
+		print(f"min queens: {min(queen_amounts)}")
