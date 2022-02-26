@@ -127,7 +127,7 @@ def define_chi(n, k):
 
 	# Force ( q[i][j] -> q[i-1][j] | b[i]&q[i-1][j-1] ) paths in q table
 	# Every q between first column and diagonal
-	n_clauses += 2 * (N-1) * (k-1) # taking worst case
+	n_clauses += 2 * ( (N-k)*(k-1) + (k-2)*(k-1)/2 ) # taking worst case
 	for i in range_incl(2, N):
 		for j in range_incl(2, min(i-1, k)):
 			chi_n_k_clauses.extend([
@@ -142,7 +142,7 @@ def define_chi(n, k):
 			(Not(q[i][i]) | b[i]),
 		])
 	# First column of qs except 1,1
-	n_clauses += N-1
+	n_clauses += (N-1)
 	for i in range_incl(2, N):
 		chi_n_k_clauses.append(
 			(Not(q[i][1]) | q[i-1][1] | b[i])
@@ -152,7 +152,7 @@ def define_chi(n, k):
 	# Optional for functionality but nice for visualizing the q table.
 	# Also speeds up computation by limiting combinations.
 	# Force q monotonicity
-	n_clauses += (N-1) * k
+	n_clauses += (N-1-k)*k + k*(k+1)/2
 	for i in range_incl(1, N-1):
 		for j in range_incl(1, min(i, k)):
 			chi_n_k_clauses.append(
@@ -165,7 +165,7 @@ def define_chi(n, k):
 	# limiting combinations.
 	# Force b -> q
 	# b[i] & q[i-1][j-1] -> q[i][j]
-	n_clauses += (N-1) * (k-1)
+	n_clauses += (N-k)*(k-1) + (k-1)*k/2
 	for i in range_incl(2, N):
 		for j in range_incl(2, min(i, k)):
 			chi_n_k_clauses.append(
@@ -186,13 +186,13 @@ def define_chi(n, k):
 
 
 if __name__ == "__main__":
-	n = 3
-	k = 4
+	n = 8
+	k = 8
 	psi_n = define_psi(n)		# ~ 2 n^3 clauses
 	chi_n_k = define_chi(n, k) 	# ~ 4kn^2 clauses
 
 	formula = And(
-		# psi_n,
+		psi_n,
 		chi_n_k
 	)
 
