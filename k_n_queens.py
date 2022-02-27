@@ -86,18 +86,18 @@ def define_psi(n):
 					Not(b[idx(i,j)]) | Not(b[idx(k,j)]), # same column
 				])
 	# Restrict \ diagonal
-	n_clauses += n*n*(n-1)/2
-	for i in range_incl(1, n):
-		for j in range_incl(1, n):
+	n_clauses += (n-1)*(n-1)*(n-1)/2
+	for i in range_incl(1, n-1):
+		for j in range_incl(1, n-1):
 			for m in range_incl(1, min(n-i, n-j)):
 				psi_n_clauses.extend([
 					Not(b[idx(i,j)]) | Not(b[idx(i+m,j+m)]),
 				])
 	# Restrict / diagonal
-	n_clauses += n*n*(n-1)/2
-	for i in range_incl(1, n):
-		for j in range_incl(1, n):
-			for m in range_incl(1, min(n-i, j)):
+	n_clauses += (n-1)*(n-1)*(n-1)/2
+	for i in range_incl(1, n-1):
+		for j in range_incl(2, n):
+			for m in range_incl(1, min(n-i, j-1)):
 				psi_n_clauses.extend([
 					Not(b[idx(i,j)]) | Not(b[idx(i+m,j-m)]),
 				])				
